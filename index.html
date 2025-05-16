@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HD Image Enhancer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #38b6ff;
+            --primary-dark: #0095e6;
+            --bg-color: #f8fafc;
+            --text-color: #1e293b;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --border-radius: 12px;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --text-color: #f8fafc;
+            --card-bg: #1e293b;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, var(--primary-color), #00c6ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            color: var(--text-color);
+            opacity: 0.8;
+            font-weight: 300;
+        }
+
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .upload-area {
+            width: 100%;
+            max-width: 600px;
+            height: 300px;
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: var(--card-bg);
+            box-shadow: var(--shadow);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragging {
+            background-color: rgba(56, 182, 255, 0.1);
+            border-color: var(--primary-dark);
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .upload-text {
+            margin-bottom: 1rem;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(56, 182, 255, 0.3);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(56, 182, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(56, 182, 255, 0.1);
+        }
+
+        .results {
+            display: none;
+            width: 100%;
+            margin-top: 2rem;
+        }
+
+        .image-comparison {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        @media (min-width: 768px) {
+            .image-comparison {
+                flex-direction: row;
+            }
+        }
+
+        .image-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+        }
+
+        .image-wrapper {
+            position: relative;
+            width: 100%;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .image-wrapper:hover img {
+            transform: scale(1.02);
+        }
+
+        .image-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+
+        .progress-container {
+            display: none;
+            width: 100%;
+            max-width: 600px;
+            margin: 2rem auto;
+            text-align: center;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), #00c6ff);
+            width: 0;
+            transition: width 0.3s;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: var(--card-bg);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            color: var(--text-color);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(56, 182, 255, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>HD Image Enhancer</h1>
+            <p class="subtitle">Upload an image to enhance its quality with AI</p>
+        </header>
+
+        <div class="upload-container">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📁</div>
+                <h3 class="upload-text">Drag & Drop your image here</h3>
+                <p>or</p>
+                <button class="btn" id="uploadBtn">Select Image</button>
+                <input type="file" id="fileInput" class="file-input" accept="image/jpeg, image/png, image/webp">
+            </div>
+            <div class="file-info" id="fileInfo"></div>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress" id="progressBar"></div>
+            </div>
+            <p>Enhancing your image...</p>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <div class="results" id="results">
+            <div class="image-comparison">
+                <div class="image-container">
+                    <h3>Original Image</h3>
+                    <div class="image-wrapper">
+                        <img id="originalImage" src="" alt="Original image">
+                    </div>
+                    <div class="image-stats">
+                        <span id="originalSize"></span>
+                        <span id="originalResolution"></span>
+                    </div>
+                </div>
+                <div class="image-container">
+                    <h3>Enhanced Image</h3>
+                    <div class="image-wrapper">
+                        <img id="enhancedImage" src="" alt="Enhanced image">
+                    </div>
+                    <div class="image-stats">
+                        <span id="enhancedSize"></span>
+                        <span id="enhancedResolution"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn" id="downloadBtn">Download Enhanced Image</button>
+                <button class="btn btn-secondary" id="newImageBtn">Enhance Another Image</button>
+            </div>
+        </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle">🌓</button>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const uploadArea = document.getElementById('uploadArea');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const fileInput = document.getElementById('fileInput');
+            const fileInfo = document.getElementById('fileInfo');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            const results = document.getElementById('results');
+            const originalImage = document.getElementById('originalImage');
+            const enhancedImage = document.getElementById('enhancedImage');
+            const originalSize = document.getElementById('originalSize');
+            const originalResolution = document.getElementById('originalResolution');
+            const enhancedSize = document.getElementById('enhancedSize');
+            const enhancedResolution = document.getElementById('enhancedResolution');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const newImageBtn = document.getElementById('newImageBtn');
+            const themeToggle = document.getElementById('themeToggle');
+
+            // Drag and drop events
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+
+            function highlight() {
+                uploadArea.classList.add('dragging');
+            }
+
+            function unhighlight() {
+                uploadArea.classList.remove('dragging');
+            }
+
+            uploadArea.addEventListener('drop', handleDrop, false);
+
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) {
+                    handleFiles(files);
+                }
+            }
+
+            // File input click
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function() {
+                if (this.files.length) {
+                    handleFiles(this.files);
+                }
+            });
+
+            // Theme toggle
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                if (currentTheme === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeToggle.textContent = '🌙';
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeToggle.textContent = '☀️';
+                }
+            });
+
+            // New image button
+            newImageBtn.addEventListener('click', () => {
+                results.style.display = 'none';
+                uploadArea.style.display = 'flex';
+                fileInfo.textContent = '';
+                fileInput.value = '';
+            });
+
+            // Download button
+            downloadBtn.addEventListener('click', () => {
+                const link = document.createElement('a');
+                link.href = enhancedImage.src;
+                link.download = 'enhanced_' + (fileInput.files[0]?.name || 'image');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+
+            // Handle uploaded files
+            function handleFiles(files) {
+                const file = files[0];
+                if (!file.type.match('image.*')) {
+                    alert('Please upload an image file (JPEG, PNG, or WEBP)');
+                    return;
+                }
+
+                // Display file info
+                fileInfo.textContent = `Selected: ${file.name} (${formatFileSize(file.size)})`;
+
+                // Hide upload area and show progress
+                uploadArea.style.display = 'none';
+                progressContainer.style.display = 'block';
+
+                // Simulate progress (in a real app, this would be API calls)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 5;
+                    progressBar.style.width = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(progressInterval);
+                        processImage(file);
+                    }
+                }, 100);
+            }
+
+            // Process the image (simulated - in a real app, this would be API calls)
+            function processImage(file) {
+                progressContainer.style.display = 'none';
+                loadingSpinner.style.display = 'block';
+
+                // Read the file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // In a real app, you would send the image to a backend API for processing
+                    // This is just a simulation that doubles the resolution client-side
+                    
+                    // Create original image
+                    originalImage.src = e.target.result;
+                    
+                    // Simulate processing delay
+                    setTimeout(() => {
+                        // Create a canvas to "enhance" the image (simulated)
+                        const img = new Image();
+                        img.onload = function() {
+                            // Get original dimensions
+                            const originalWidth = img.width;
+                            const originalHeight = img.height;
+                            
+                            // Create enhanced version (just resizing for demo)
+                            const canvas = document.createElement('canvas');
+                            canvas.width = originalWidth * 2;
+                            canvas.height = originalHeight * 2;
+                            const ctx = canvas.getContext('2d');
+                            ctx.imageSmoothingEnabled = true;
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                            
+                            // Convert to data URL
+                            enhancedImage.src = canvas.toDataURL('image/jpeg', 0.9);
+                            
+                            // Display stats
+                            originalSize.textContent = formatFileSize(file.size);
+                            originalResolution.textContent = `${originalWidth}×${originalHeight}`;
+                            
+                            // Calculate enhanced size (simulated)
+                            const enhancedFileSize = file.size * 1.5; // Simulate size increase
+                            enhancedSize.textContent = formatFileSize(enhancedFileSize);
+                            enhancedResolution.textContent = `${originalWidth * 2}×${originalHeight * 2}`;
+                            
+                            // Show results
+                            loadingSpinner.style.display = 'none';
+                            results.style.display = 'block';
+                        };
+                        img.src = e.target.result;
+                    }, 2000);
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // Helper function to format file size
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+            }
+        });
+    </script>
+</body>
+</html>
